@@ -16,4 +16,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 # 6. Команда по умолчанию для запуска FastAPI через uvicorn
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends postgresql-client \
+    && rm -rf /var/lib/apt/lists/*
+
+CMD ["sh", "start.sh"]

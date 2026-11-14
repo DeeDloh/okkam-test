@@ -9,4 +9,6 @@ sqlalchemy
 dotenv
 asyncpg
 pydantic
+alembic
+alembic-utils
 sqlalchemy[asyncio]
