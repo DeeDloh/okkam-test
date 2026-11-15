@@ -14,6 +14,13 @@ CSV загружается автоматически при первом зап
 - `init/` — загрузка CSV и подготовка средних весов.
 - `Untitled.ipynb` — предварительный анализ: типы, пропуски, распределения и даты.
 - `docker-compose.yaml`, `Dockerfile` — запуск API и PostgreSQL.
+# Тесты
+
+Чтобы запустить тесты:
+```bash
+python -m pip install -r tests/requirements-test.txt
+python -m pytest tests -v
+```
 
 # Условие
 
