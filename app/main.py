@@ -1,4 +1,4 @@
-from fastapi import FastAPI, File, UploadFile, Depends, Form
+from fastapi import FastAPI
 
 from fastapi.middleware.cors import CORSMiddleware
 from app.api.routes import router as okkam_router

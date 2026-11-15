@@ -1,7 +1,4 @@
-from typing import List, Optional
-from pydantic import BaseModel, Field
-
-from datetime import datetime 
+from pydantic import BaseModel
 
 class PercentModel(BaseModel):
     percent: float

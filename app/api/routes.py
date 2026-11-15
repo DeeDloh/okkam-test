@@ -1,9 +1,14 @@
-from fastapi import APIRouter, Depends
-from sqlalchemy.ext.asyncio import AsyncSession
-from app.db.database import get_db
-from app.api.schemas import PercentModel
-from app.api.dependencies import calculate_percent
+import logging
 
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.api.dependencies import calculate_percent
+from app.api.schemas import PercentModel
+from app.db.database import get_db
+
+logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
@@ -11,6 +16,11 @@ router = APIRouter()
 async def get_percent(audience1: str,
                       audience2: str,
                       db: AsyncSession = Depends(get_db)):
-    result = {}
-    result["percent"] = await calculate_percent(db=db, condition1=audience1, condition2=audience2)
-    return result
+    try:
+        percent = await calculate_percent(db, audience1, audience2)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    except (SQLAlchemyError, OSError, TimeoutError) as exc:
+        logger.exception("Ошибка при работе с базой данных")
+        raise HTTPException(status_code=503, detail="База данных недоступна") from exc
+    return {"percent": percent}

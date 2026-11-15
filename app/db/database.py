@@ -16,7 +16,11 @@ if not database_url:
 SQLALCHEMY_DATABASE_URL = database_url
 
 engine = create_async_engine(
-    database_url, echo=True, future=True
+    database_url, 
+    pool_pre_ping=True, 
+    echo=True, 
+    future=True,
+    pool_recycle=1800
 )
 SessionLocal = sessionmaker(
     bind=engine,

@@ -1,24 +1,26 @@
 #!/bin/sh
-set -e
+set -eu
 
-uvicorn app.main:app --host 0.0.0.0 --port 8000 &
-api_pid=$!
-
-trap 'kill "$api_pid" 2>/dev/null || true' EXIT
-
-alembic upgrade head
-
+DB_HOST="${POSTGRES_HOST:-db}"
 export PGPASSWORD="$POSTGRES_PASSWORD"
 
-count=$(psql -h db -U "$POSTGRES_USER" -d "$POSTGRES_DB" \
-    -At -v ON_ERROR_STOP=1 \
-    -c "SELECT COUNT(*) FROM observations")
+run_psql() {
+    psql -h "$DB_HOST" -U "$POSTGRES_USER" -d "$POSTGRES_DB" \
+        -v ON_ERROR_STOP=1 "$@"
+}
+
+echo "миграция"
+alembic upgrade head
+
+count=$(run_psql -At -c "SELECT COUNT(*) FROM observations")
 
 if [ "$count" -eq 0 ]; then
-    psql -h db -U "$POSTGRES_USER" -d "$POSTGRES_DB" \
-        -v ON_ERROR_STOP=1 -f /app/init/01_load.sql
+    echo "Загрузка данных data.csv"
+    run_psql -f /app/init/01_load.sql
+    echo "Данные загружены"
 else
-    echo "Данные уже загружены"
+    echo "Данные уже загружены ($count строк)"
 fi
 
-wait "$api_pid"
+echo "Запуск API"
+exec uvicorn app.main:app --host 0.0.0.0 --port 80
