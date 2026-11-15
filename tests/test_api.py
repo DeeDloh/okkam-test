@@ -126,3 +126,47 @@ def test_get_percent(
         samples.append(elapsed_ms)
 
     timings.append((request.node.callspec.id, samples, BASE_URL))
+
+
+@pytest.mark.parametrize(
+    "audience1, audience2, matches1, matches2",
+    [
+        pytest.param(
+            "Age IN (18, 35)",
+            "NOT Sex = 1",
+            lambda sex, age: age in (18, 35),
+            lambda sex, age: sex != 1,
+            id="in-not",
+        ),
+        pytest.param(
+            "CASE WHEN Sex = 1 THEN Age > 30 ELSE Age > 20 END",
+            "age % 2 = 0",
+            lambda sex, age: age > 30 if sex == 1 else age > 20,
+            lambda sex, age: age % 2 == 0,
+            id="case-arithmetic",
+        ),
+    ],
+)
+def test_other_sql_syntax(respondents, audience1, audience2, matches1, matches2,
+                          api_client):
+    total = sum(weight for sex, age, weight in respondents if matches1(sex, age))
+    common = sum(
+        weight
+        for sex, age, weight in respondents
+        if matches1(sex, age) and matches2(sex, age)
+    )
+    response = api_client.get(
+        f"{BASE_URL}/getPercent",
+        params={"audience1": audience1, "audience2": audience2},
+    )
+    assert response.status_code == 200, response.text
+    assert response.json()["percent"] == pytest.approx(common / total, rel=1e-10)
+
+
+@pytest.mark.parametrize("condition", ["Age", "Age = 5 = 5"])
+def test_condition_rejected_by_database_returns_422(api_client, condition):
+    response = api_client.get(
+        f"{BASE_URL}/getPercent",
+        params={"audience1": condition, "audience2": "Sex = 2"},
+    )
+    assert response.status_code == 422, response.text

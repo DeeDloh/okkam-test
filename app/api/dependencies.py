@@ -1,5 +1,5 @@
-from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
+from app.api.conditions import parse_condition
 from app.db.model import RespondentStats
 
 from sqlalchemy import select, func
@@ -9,8 +9,8 @@ async def calculate_percent(db: AsyncSession, condition1: str, condition2: str) 
 
     weight = RespondentStats.avg_weight
 
-    first = text(f"({condition1})")
-    second = text(f"({condition2})")
+    first = parse_condition(condition1)
+    second = parse_condition(condition2)
 
     total = func.sum(weight).filter(first)
 

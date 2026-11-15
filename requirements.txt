@@ -12,3 +12,4 @@ pydantic
 alembic
 alembic-utils
 sqlalchemy[asyncio]
+sqlglot

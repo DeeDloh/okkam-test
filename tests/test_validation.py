@@ -35,6 +35,30 @@ def test_invalid_parameters(client, params):
     assert response.status_code == 422
 
 
+@pytest.mark.parametrize(
+    "condition",
+    [
+        "",
+        "Age >",
+        "1=1) OR (1=1",
+        "Weight > 1",
+        "Age > 18; DROP TABLE observations",
+        "Age > (SELECT 1)",
+        "pg_sleep(10) IS NULL",
+        "length(pg_read_file('/etc/hostname')) > 0",
+        "Age > :x",
+        "Age > " + "1" * 500,
+    ],
+)
+def test_forbidden_condition_returns_422(client, condition):
+    for params in (
+        {"audience1": condition, "audience2": "Sex = 2"},
+        {"audience1": "Sex = 2", "audience2": condition},
+    ):
+        response = client.get("/getPercent", params=params)
+        assert response.status_code == 422, response.text
+
+
 def test_database_error_returns_503_and_does_not_expose_details(client, monkeypatch):
     error = OperationalError("SELECT secret", {}, Exception("private database error"))
     mock = AsyncMock(side_effect=[error, 0.5])
