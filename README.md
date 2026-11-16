@@ -19,6 +19,7 @@ CSV загружается автоматически при первом зап
 Чтобы запустить тесты:
 ```bash
 python -m pip install -r tests/requirements-test.txt
+python -m pip install -r requirements.txt
 python -m pytest tests -v
 ```
 

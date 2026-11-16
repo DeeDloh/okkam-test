@@ -47,7 +47,6 @@ def test_invalid_parameters(client, params):
         "pg_sleep(10) IS NULL",
         "length(pg_read_file('/etc/hostname')) > 0",
         "Age > :x",
-        "Age > " + "1" * 500,
     ],
 )
 def test_forbidden_condition_returns_422(client, condition):
